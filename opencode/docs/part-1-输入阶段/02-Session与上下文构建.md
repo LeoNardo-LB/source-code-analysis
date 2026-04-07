@@ -68,11 +68,9 @@ graph TB
 
 ```mermaid
 erDiagram
-    Project ||--o{ Session : "project_id"
     Session ||--o{ Message : "session_id"
     Message ||--o{ Part : "message_id"
     Session ||--o| Todo : "session_id"
-    Session }o--|| Workspace : "workspace_id"
     Session }o--o| Session : "parent_id (fork)"
 
     Session {
@@ -93,6 +91,8 @@ erDiagram
         int time_updated "更新时间"
         int time_compacting "压缩开始时间"
         int time_archived "归档时间"
+        int summary_files "文件数"
+        json revert "回退信息"
     }
 
     Message {
@@ -121,14 +121,9 @@ erDiagram
         int time_created "创建时间"
         int time_updated "更新时间"
     }
-
-    Permission {
-        text project_id PK "ProjectID"
-        json data "权限规则集"
-        int time_created "创建时间"
-        int time_updated "更新时间"
-    }
 ```
+
+> 完整 ER 图（含 Project、Permission、SessionShare、Account）请参见 [15-存储与数据模型](../part-6-工程实践/15-存储与数据模型.md)。
 
 ### 品牌类型 (Branded Types)
 
@@ -307,34 +302,9 @@ tokens: {
 
 ## 6. 上下文构建流程
 
-当用户发送消息时，`prompt.ts` 中的 `runLoop` 函数会构建完整的 LLM 上下文。
+当用户发送消息时，`prompt.ts` 中的 `runLoop` 函数负责完整的 Agent 推理循环。核心流程包括：消息历史加载 → 过滤已压缩消息 → 子任务/压缩处理 → 上下文构建 → LLM 调用。
 
-```mermaid
-flowchart TD
-    A["runLoop 开始"] --> B["MessageV2.filterCompactedEffect<br/>加载消息历史"]
-    B --> C["过滤已压缩的旧消息"]
-    C --> D["从历史中提取<br/>lastUser / lastAssistant / lastFinished"]
-    D --> E{有 Subtask?}
-    E -->|是| F["handleSubtask<br/>执行子任务"]
-    F --> A
-    E -->|否| G{有 Compaction?}
-    G -->|是| H["compaction.process<br/>执行上下文压缩"]
-    H --> I{结果 = stop?}
-    I -->|是| J["break"]
-    I -->|continue| A
-    G -->|否| K{Token 溢出?}
-    K -->|是| L["compaction.create<br/>创建压缩任务"]
-    L --> A
-    K -->|否| M["构建上下文"]
-    M --> N["insertReminders<br/>插入计划模式提醒"]
-    N --> O["resolveTools<br/>解析可用工具"]
-    O --> P["SystemPrompt.skills<br/>+ SystemPrompt.environment<br/>+ instruction.system"]
-    P --> Q["MessageV2.toModelMessages<br/>转换为 LLM 格式"]
-    Q --> R["handle.process<br/>调用 LLM 流式推理"]
-    R --> S{finish?}
-    S -->|break| J
-    S -->|continue| A
-```
+> 详细的 runLoop 执行循环、Prompt 层次结构和工具解析逻辑，请参见 [03-Agent 系统与 Prompt 构建](../part-2-推理阶段/03-Agent系统与Prompt构建.md)。
 
 ### 消息历史管理伪代码
 
@@ -407,28 +377,9 @@ export function page(input: { sessionID, limit, before? }) {
 
 ### 数据库初始化
 
-```mermaid
-flowchart LR
-    A["Database.Client()"] --> B["lazy 初始化"]
-    B --> C["init(path)"]
-    C --> D["PRAGMA 设置"]
-    D --> E["迁移"]
+数据库通过 `Database.Client()` 延迟初始化，首次访问时执行路径解析、PRAGMA 性能配置和自动迁移。PRAGMA 配置采用 WAL 模式 + 异步刷盘策略，在并发读写和持久性之间取得平衡。
 
-    subgraph PRAGMA["PRAGMA 配置"]
-        D1["journal_mode = WAL<br/>（并发读写）"]
-        D2["synchronous = NORMAL<br/>（性能优先）"]
-        D3["busy_timeout = 5000<br/>（5秒等待）"]
-        D4["cache_size = -64000<br/>（64MB 缓存）"]
-        D5["foreign_keys = ON<br/>（外键约束）"]
-        D6["wal_checkpoint(PASSIVE)"]
-    end
-
-    subgraph MIG["迁移策略"]
-        E1["内嵌迁移（bundled）"]
-        E2["文件系统迁移（dev）"]
-        E3["JSON → SQLite 迁移<br/>（首次运行）"]
-    end
-```
+> 完整的 PRAGMA 配置、迁移策略和存储路径说明，请参见 [15-存储与数据模型](../part-6-工程实践/15-存储与数据模型.md)。
 
 ### 数据库路径
 
@@ -622,7 +573,7 @@ const supportsMediaInToolResults = (() => {
 | 文件路径 | 核心职责 | 关键行号 |
 |----------|----------|----------|
 | `src/session/session.sql.ts` | Drizzle 表定义 (session/message/part/todo/permission) | L14-44 (SessionTable), L46-58 (MessageTable), L60-76 (PartTable) |
-| `src/session/message-v2.ts` | 消息数据模型，Part 类型联合，消息转换 | L87-401 (Part 类型), L357-455 (User/Assistant), L576-812 (toModelMessages), L903-919 (filterCompacted) |
+| `src/session/message-v2.ts` | 消息数据模型，Part 类型联合，消息转换 | L87-350 (Part 类型), L357-455 (User/Assistant), L576-812 (toModelMessages), L903-919 (filterCompacted) |
 | `src/session/schema.ts` | 品牌 ID 类型 (SessionID/MessageID/PartID) | L7-38 |
 | `src/session/system.ts` | 系统 Prompt 构建（Provider 差异化 + 环境信息 + Skills） | L20-34 (provider), L36-61 (environment), L63-75 (skills) |
 | `src/session/prompt.ts` | **核心枢纽**：Prompt 构建、LLM 循环、Tool 解析 | L67-78 (Interface), L1337-1566 (runLoop), L388-551 (resolveTools), L949-1303 (createUserMessage) |

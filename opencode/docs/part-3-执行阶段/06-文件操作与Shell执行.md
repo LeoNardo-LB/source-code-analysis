@@ -516,26 +516,9 @@ async function create(input: CreateInput) {
 
 ### 权限检查流程
 
-```mermaid
-flowchart TD
-    Start["工具调用"] --> Check1{"路径是否在<br/>项目目录内?"}
-    Check1 -->|"是"| Check2{"权限规则匹配"}
-    Check1 -->|"否"| AskExt["请求 'external_directory' 权限"]
-    AskExt -->|"用户允许"| Check2
-    AskExt -->|"用户拒绝"| Reject["抛出 RejectedError"]
+工具调用涉及的安全机制（目录权限校验、allow/deny/ask 策略、Deferred 级联）由独立的权限控制模块管理。
 
-    Check2 -->|"allow"| Execute["直接执行"]
-    Check2 -->|"deny"| Deny["抛出 DeniedError"]
-    Check2 -->|"ask"| AskUser["显示权限对话框"]
-    AskUser -->|"always"| Execute
-    AskUser -->|"once"| Execute
-    AskUser -->|"reject"| Reject
-
-    style AskExt fill:#fff3e0
-    style AskUser fill:#fff3e0
-    style Reject fill:#ffcdd2
-    style Deny fill:#ffcdd2
-```
+> 完整的权限检查流程、策略匹配算法和安全模型请参见 [09-权限控制与安全模型](../part-4-输出阶段/09-权限控制与安全模型.md)。
 
 ### 外部目录检查
 

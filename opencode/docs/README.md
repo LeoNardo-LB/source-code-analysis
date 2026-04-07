@@ -15,19 +15,9 @@ OpenCode 是一个 **100% 开源的 AI 编码代理**（对标 Claude Code），
 
 ## 技术栈速览
 
-| 类别 | 技术 | Java 类比 |
-|------|------|-----------|
-| 运行时 | Bun | JVM |
-| 语言 | TypeScript 5.8 | Java |
-| 效果系统 | Effect 4.0 | RxJava / Vavr |
-| Schema 验证 | Zod 4 | Bean Validation |
-| ORM | Drizzle ORM | MyBatis-Plus |
-| Web 框架 | Hono | Spring Boot |
-| 前端框架 | SolidJS | React（类似） |
-| 终端 UI | OpenTUI | — |
-| AI SDK | Vercel AI SDK 6 | — |
-| 构建工具 | Turborepo | Maven/Gradle |
-| 桌面应用 | Tauri v2 | Electron |
+OpenCode 基于 **TypeScript + Bun** 运行时构建，使用 **SolidJS** 驱动前端（TUI 和 Web），通过 **Vercel AI SDK v6** 适配 25+ 个 LLM 提供商，数据持久化采用 **Drizzle ORM + SQLite**，插件系统支持 **MCP 协议**。整体采用 Effect 框架管理副作用，Turborepo 管理 Monorepo。
+
+> 完整技术栈和架构分析请参见 [源码学习路线图与架构总览](00-源码学习路线图与架构总览.md)。
 
 ---
 

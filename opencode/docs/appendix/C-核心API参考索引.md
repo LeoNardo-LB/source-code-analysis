@@ -182,14 +182,14 @@ graph TD
 
 | 文件 | 位置 | 优先级 |
 |------|------|--------|
-| 全局配置 | `~/.opencode/config.json` | 最低 |
+| 全局配置 | `~/.config/opencode/config.json` | 最低 |
 | 项目配置 | `.opencode/opencode.json` | 最高 |
 
 ### 3.4 配置合并策略
 
 ```mermaid
 flowchart LR
-    GLOBAL["全局配置<br/>~/.opencode/config.json"] --> MERGE["深度合并"]
+    GLOBAL["全局配置<br/>~/.config/opencode/config.json"] --> MERGE["深度合并"]
     PROJECT["项目配置<br/>.opencode/opencode.json"] --> MERGE
     ENV["环境变量<br/>OPENCODE_XXX"] --> MERGE
     MERGE --> FINAL["最终配置"]
