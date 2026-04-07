@@ -52,7 +52,7 @@ graph TB
 
 ## 2. Agent 类型对比表
 
-OpenCode 内置了 **6 个原生 Agent**，用户可通过配置扩展。
+OpenCode 内置了 **7 个原生 Agent**，用户可通过配置扩展。
 
 | Agent | 模式 | 可见 | 权限特点 | Prompt 模板 | 用途 |
 |-------|------|------|----------|-------------|------|
@@ -483,21 +483,23 @@ flowchart TD
 ### 溢出检测
 
 ```typescript
-// session/compaction.ts
-export async function isOverflow(input: { tokens: TokenUsage; model: Model }) {
-  return overflow(input.tokens, input.model)
-}
+// session/overflow.ts — 溢出检测（基于可用空间算法）
+const COMPACTION_BUFFER = 20_000
 
-// session/overflow.ts — 溢出检测阈值
-export function isOverflow(tokens: TokenUsage, model: Model): boolean {
-  const contextLimit = model.limit.context
-  const threshold = contextLimit * 0.85  // 85% 阈值
+export function isOverflow(input: { cfg: Config.Info; tokens: MessageV2.Assistant["tokens"]; model: Provider.Model }) {
+  if (input.cfg.compaction?.auto === false) return false
+  const context = input.model.limit.context
+  if (context === 0) return false
 
-  // 检查输入 Token 是否接近上下文限制
-  if (tokens.input >= threshold) return true
-  // 检查缓存读取 Token（某些 Provider 的缓存也算上下文）
-  if (tokens.cache.read >= threshold) return true
-  return false
+  const count =
+    input.tokens.total || input.tokens.input + input.tokens.output + input.tokens.cache.read + input.tokens.cache.write
+
+  const reserved =
+    input.cfg.compaction?.reserved ?? Math.min(COMPACTION_BUFFER, ProviderTransform.maxOutputTokens(input.model))
+  const usable = input.model.limit.input
+    ? input.model.limit.input - reserved
+    : context - ProviderTransform.maxOutputTokens(input.model)
+  return count >= usable
 }
 ```
 

@@ -1,4 +1,4 @@
-# 14 - 构建系统与 Monorepo
+# 14 · 构建系统与 Monorepo
 
 > OpenCode v1.3.17 · 源码级深度解析
 > Java 开发者友好 · 手机可读

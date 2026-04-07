@@ -1,4 +1,4 @@
-# 响应渲染与 TUI 界面
+# 08 · 响应渲染与 TUI 界面
 
 > OpenCode v1.3.17 源码学习 | 输出阶段
 
@@ -315,7 +315,7 @@ function App() {
 
 | 维度 | TUI (终端 UI) | Web UI |
 |------|-------------|--------|
-| **框架** | SolidJS + @opentui | SolidJS + @opencode/app |
+| **框架** | SolidJS + @opentui | SolidJS + @opencode-ai/app |
 | **渲染目标** | 终端 (ANSI 转义) | 浏览器 (DOM) |
 | **代码高亮** | Shiki (终端色彩) | Shiki (HTML) |
 | **Markdown** | 自定义终端渲染 | 标准 HTML 渲染 |

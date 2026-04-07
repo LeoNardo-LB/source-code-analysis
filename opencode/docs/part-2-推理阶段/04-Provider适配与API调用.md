@@ -24,7 +24,7 @@ graph TB
     end
 
     subgraph 外部["外部 SDK"]
-        AI_SDK["Vercel AI SDK v5"]
+        AI_SDK["Vercel AI SDK v6"]
         ANTHROPIC["@ai-sdk/anthropic"]
         OPENAI["@ai-sdk/openai"]
         GOOGLE["@ai-sdk/google"]
@@ -692,13 +692,13 @@ classDiagram
     MessageError <|-- ContextOverflowError
     MessageError <|-- OutputLengthError
     MessageError <|-- AbortedError
-    MessageError <|-- StructuredError
+    MessageError <|-- StructuredOutputError
 ```
 
 ### 上下文溢出检测
 
 ```typescript
-// provider/error.ts — 28 种溢出模式匹配
+// provider/error.ts — 20 种溢出模式匹配（+ 1 个非正则 4xx 检测）
 const OVERFLOW_PATTERNS = [
   /prompt is too long/i,                          // Anthropic
   /input is too long for requested model/i,          // Amazon Bedrock

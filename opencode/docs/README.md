@@ -107,11 +107,12 @@ graph LR
 |---|------|-----------|
 | 01 | [CLI 入口与启动流程](part-1-输入阶段/01-CLI入口与启动流程.md) | 从命令行输入到 Server 就绪的完整启动链路 |
 
+| 02 | [Session 与上下文构建](part-1-输入阶段/02-Session与上下文构建.md) | 消息历史管理、上下文窗口构建、数据持久化 |
+
 ### Part 2 — 推理阶段：Agent 如何思考
 
 | # | 文档 | 一句话简介 |
 |---|------|-----------|
-| 02 | [Session 与上下文构建](part-1-输入阶段/02-Session与上下文构建.md) | 消息历史管理、上下文窗口构建、数据持久化 |
 | 03 | [Agent 系统与 Prompt 构建](part-2-推理阶段/03-Agent系统与Prompt构建.md) | build/plan/general 三种 Agent 的推理循环与 Prompt 组装 |
 | 04 | [Provider 适配与 API 调用](part-2-推理阶段/04-Provider适配与API调用.md) | 统一适配 20+ AI 提供商的抽象设计与流式响应 |
 
