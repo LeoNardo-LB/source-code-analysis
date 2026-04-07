@@ -1,0 +1,32 @@
+schema: spec-driven
+context: |
+  这是示例配置内容，展示了如何定义一个基于规范驱动端到端测试要求，必须真实运行，禁止 mock 替代，需要合理编排以验证完整的业务流程或能力：
+    - 前端：通过 Playwright/Cypress 等页面自动化工具，验证真实渲染、交互、路由、表单提交
+    - 后端 API：启动真实服务，用 supertest 或 curl 发送 HTTP 请求，验证状态码、响应体、错误处理
+    - CLI/工具类：执行真实命令行进程，验证 stdout/stderr/exit code
+    - 数据相关：使用真实数据库实例（推荐 Docker 临时容器），验证查询结果与数据完整性
+    - 插件/SDK：加载真实运行时环境，调用公开 API，验证副作用与集成行为
+    - 并发/异步：使用真实并发场景验证竞态安全、超时处理、重试机制
+    - 所有 E2E 测试必须可独立运行、可重复执行、无外部依赖残留
+    - 测试完毕后必须清理测试产生的中间文件，仅保留必要的测试报告
+  所有 artifact 创建完毕后（最后一个 artifact 写入后），MUST 执行端到端一致性校验，全部通过后才能宣布完成。
+    - 校验方法（三维度交叉比对）：
+      1) proposal → specs 覆盖：proposal 列出的每个改动项，都至少有 1 个 spec requirement 对应。proposal 未提及的改动不应出现在 specs 中。
+      2) specs → tasks 覆盖：每个 spec requirement 都至少有 1 个 task 对应。task 涉及但 spec 未覆盖的改动应补充或说明理由。
+      3) tasks → specs 对齐：每个 task 描述的目标文件/行为必须与对应 spec requirement 的 WHEN/THEN 断言一致。
+      4) design → tasks 结构：design decisions 的每个选择都在 tasks 中体现（如 Chunk 划分、文件重命名 vs 删除）。
+      5) Non-Goals 矛盾：检查 tasks 是否违反了 design.md Non-Goals 中声明的边界。
+      6) task 编号/格式：编号连续无重复、每个 Chunk 以测试 task 结尾（纯文档 Chunk 除外）。
+    - 校验结果以表格形式输出，列出 PASS/FAIL 每条 + 问题总数。有 FAIL 时必须修复后再宣布完成。
+    - 校验不通过时，修复后必须重新运行校验，直到全部 PASS。
+    - **生成todolist后, 在创建task.md后增加一个 "[ ] 进行artifact文档, 讨论结果的一致性检查"**
+
+rules:
+  tasks:
+    - 每个功能模块的 task 必须遵循 TDD 流程，按此顺序生成子任务：
+        1) RED：编写失败测试，定义接口契约与期望行为（覆盖正常/边界/极端/异常场景）
+        2) GREEN：编写最小可用代码使测试通过
+        3) REFACTOR：补充正常业务逻辑，保持测试全绿
+        4) 循环以上步骤，每个行为点独立走一轮红绿重构
+    - 测试 task 的描述必须明确列出需覆盖的场景类别，不允许笼统写"编写测试"。
+    - tasks.md 的第一个 checkbox 必须是："- [ ] 确认 test-driven-development、dispatching-parallel-agents 技能已加载（未加载则加载，已加载则跳过）"
